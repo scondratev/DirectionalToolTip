@@ -7,7 +7,9 @@
 #include <QStyle>
 #include <QGridLayout>
 #include <QApplication>
-#include <QDesktopWidget>
+#if QT_VERSION < QT_VERSION_CHECK(6,0,0)
+    #include <QDesktopWidget>
+#endif
 #include <QPainterPath>
 #include <QMessageBox>
 
@@ -72,10 +74,10 @@ BalloonTip::BalloonTip(QMessageBox::Icon icon, const QString& title,
 
 #ifdef Q_OS_WINCE
     const int iconSize = style()->pixelMetric(QStyle::PM_SmallIconSize);
-    const int closeButtonSize = style()->pixelMetric(QStyle::PM_SmallIconSize) - 2;
+    //const int closeButtonSize = style()->pixelMetric(QStyle::PM_SmallIconSize) - 2;
 #else
     const int iconSize = 18;
-    const int closeButtonSize = 15;
+    //const int closeButtonSize = 15;
 #endif
 
     /*QPushButton *closeButton = new QPushButton;
@@ -96,8 +98,12 @@ BalloonTip::BalloonTip(QMessageBox::Icon icon, const QString& title,
     msgLabel->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 
     // smart size for the message label
-    int limit = QApplication::desktop()->availableGeometry(msgLabel).size().width() / 3;
-
+    int limit =
+#if QT_VERSION < QT_VERSION_CHECK(6,0,0)
+        QApplication::desktop()->availableGeometry(msgLabel).size().width() / 3;
+#else
+        msgLabel->screen()->availableSize().width() / 3;
+#endif
     if (msgLabel->sizeHint().width() > limit) {
         msgLabel->setWordWrap(true);
         /*if (msgLabel->sizeHint().width() > limit) {
@@ -145,7 +151,7 @@ BalloonTip::BalloonTip(QMessageBox::Icon icon, const QString& title,
     //layout->addWidget(closeButton, 0, 2);
     layout->addWidget(msgLabel, 1, 0, 1, 3);
     layout->setSizeConstraint(QLayout::SetFixedSize);
-    layout->setMargin(3);
+    layout->setContentsMargins(3,3,3,3);
     setLayout(layout);
 
     QPalette pal = palette();
@@ -161,6 +167,7 @@ BalloonTip::~BalloonTip()
 
 void BalloonTip::paintEvent(QPaintEvent * p)
 {
+    Q_UNUSED(p)
     QPainter painter(this);
 
     painter.drawPixmap(rect(), pixmap);
@@ -345,6 +352,7 @@ void BalloonTip::balloon(const QPoint& pos, int msecs, bool showArrow, int arrow
 
 void BalloonTip::mousePressEvent(QMouseEvent *e)
 {
+    Q_UNUSED(e)
 //    if (enablePressEvent)
         close();
 }
